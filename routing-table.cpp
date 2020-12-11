@@ -33,8 +33,27 @@ RoutingTable::lookup(uint32_t ip) const
 {
 
   // FILL THIS IN
+const RoutingTableEntry *longestPref = NULL;
 
+for (auto const &entry : m_entries)
+{
+  uint32_t mask = entry.mask;
+  uint32_t prefix1 = ip & mask;
+  uint32_t prefix2 = entry.dest & mask;
+
+  if (prefix1 == prefix2) {
+    if (longestPref == NULL || entry.mask >= longestPref->mask){ 
+      longestPref = &entry;
+    }
+  }
+}
+
+if (longestPref  == NULL){
   throw std::runtime_error("Routing entry not found");
+}
+
+return *longestPref;
+ 
 }
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////

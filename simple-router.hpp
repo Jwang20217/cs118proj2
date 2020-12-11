@@ -44,6 +44,43 @@ public:
   void
   handlePacket(const Buffer& packet, const std::string& inIface, int nat_flag);
 
+  void 
+  handleArp(const Buffer& packet, const ethernet_hdr *eth_hdr, const Interface *iface);
+
+  void
+  handleArpRequest(const arp_hdr *arpHdr, const ethernet_hdr *eth_hdr, const Interface *iface);
+
+  void
+  handleArpReply(const arp_hdr *arpHdr, const ethernet_hdr *eth_hdr, const Interface *iface);
+
+  void 
+  writeArpHeader(arp_hdr *write_arp_hdr, unsigned short type, const Interface *iface, uint32_t tip);
+
+  void 
+  writeEthernetHeader(ethernet_hdr *write_eth_hdr, const ethernet_hdr *eth_hdr, const Interface *iface, unsigned short type);
+  
+  void 
+  writeIpHeader(ip_hdr *write_ip_hdr);
+
+  void 
+  writeIcmpIpHeader(ip_hdr *write_ip_hdr, const ip_hdr *ipHeader, std::size_t icmpSize);
+
+  void 
+  writeIcmpHeader(icmp_hdr *write_icmp_hdr, const icmp_hdr *recv_icmp, std::size_t icmpSize);
+
+  void 
+  handleIp(const Buffer& packet, const ethernet_hdr *eth_hdr, const Interface *iface);
+
+  void
+  handleIcmpNat(const ip_hdr *ipHeader, const Buffer& packet, const ethernet_hdr *eth_hdr, const Interface *iface);
+  void
+  handleIcmp(const ip_hdr *ipHeader, const Buffer& packet, const ethernet_hdr *eth_hdr, const Interface *iface);
+  
+  void 
+  handleIpv4SendArp(const ip_hdr *my_ip_hdr, RoutingTableEntry routingTableEntry, const Buffer& packet, const Interface *iface);
+
+  void
+  handleIpv4LongestMatchingPrefix(std::shared_ptr<ArpEntry> arpEntry, const Interface *iface, const Buffer& packet);
   /**
    * USE THIS METHOD TO SEND PACKETS
    *
