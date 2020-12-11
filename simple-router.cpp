@@ -278,7 +278,7 @@ SimpleRouter::handleIcmpNat(const ip_hdr *ipHeader, const Buffer& packet, const 
       std::shared_ptr<NatEntry> natEntry = m_natTable.lookup(recv_icmp->icmp_id);
 
     uint32_t ex_ip = findIfaceByName("sw0-eth4")->ip;
-    std::cout << "sw0-eth3" << ipToString(ex_ip) << std::endl;
+   
     std::cout << "sw0-eth4" << ipToString(ex_ip) << std::endl;
     if(natEntry == nullptr){
       std::cout << "~ nullptr ~" << std::endl;
