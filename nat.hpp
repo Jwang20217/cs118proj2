@@ -51,6 +51,9 @@ public:
   void
   insertNatEntry(uint16_t id, uint32_t in_ip, uint32_t ex_ip);
 
+  void 
+  print();
+  
   void
   clear();
 

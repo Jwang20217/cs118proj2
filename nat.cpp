@@ -14,18 +14,59 @@ namespace simple_router {
 void
 NatTable::checkNatTable()
 {
+  std::map<uint16_t, std::shared_ptr<NatEntry>>::iterator it;
+  std::list<uint16_t> removeEntries;
+  for ( it = m_natTable.begin(); it != m_natTable.end(); it++ )
+  {
+      std::shared_ptr<NatEntry> entry = it->second;
+      if(steady_clock::now() - entry->timeUsed >= SR_NAT_TO){
+        removeEntries.push_back(it->first);
+        std::cout << "ERASE from Nat Table id: " << it->first << std::endl;
+      }
+  }
+
+  for(const auto& e: removeEntries){
+    m_natTable.erase(e);
+  }
+  print();
 }
 
 std::shared_ptr<NatEntry>
 NatTable::lookup(uint16_t id)
 {
+  std::map<uint16_t, std::shared_ptr<NatEntry>>::iterator it;
+  for ( it = m_natTable.begin(); it != m_natTable.end(); it++ )
+  {
+      if(it->first == id)
+        return it->second;
+  }
   return nullptr;
 }
-
 
 void
 NatTable::insertNatEntry(uint16_t id, uint32_t in_ip, uint32_t ex_ip)
 {
+  auto entry = std::make_shared<NatEntry>();
+  entry->internal_ip = in_ip;
+  entry->external_ip = ex_ip;
+  entry->timeUsed = steady_clock::now();
+  entry->isValid = true;
+
+  m_natTable.insert( std::pair<uint16_t,std::shared_ptr<NatEntry>>(id,entry));
+}
+
+void
+NatTable::print()
+{
+  
+  std::cout << "NAT TABLE ENTRIES"  <<  std::endl;
+
+  std::map<uint16_t, std::shared_ptr<NatEntry>>::iterator it;
+  for(it = m_natTable.begin(); it != m_natTable.end(); ++it)
+  {
+    std::shared_ptr<NatEntry> second = it->second;
+    std::cout << "ICMP ID: " << it->first << " internal_ip: " << ipToString(second->internal_ip) << " external_ip: " << ipToString(second->external_ip)  << std::endl;
+  }
 }
 
 //////////////////////////////////////////////////////////////////////////
