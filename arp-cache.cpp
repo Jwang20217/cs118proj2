@@ -33,7 +33,77 @@ ArpCache::periodicCheckArpRequestsAndCacheEntries()
 
   // FILL THIS IN
 
+  std::list<std::shared_ptr<ArpRequest>> removeReqEntries;
+  std::list<std::shared_ptr<ArpEntry>> removeEntries;
+
+  for (const auto& request: m_arpRequests){                                                      
+    if (steady_clock::now() - request->timeSent > seconds(1)) 
+    {                                                     
+      if (request->nTimesSent < MAX_SENT_TIME)
+      {         
+        Buffer arp_req(sizeof(ethernet_hdr) + sizeof(arp_hdr));
+        const Interface *interface = 
+        m_router.findIfaceByName(m_router.getRoutingTable().lookup(request->ip).ifName);
+        
+        writeReq(arp_req, request);
+
+        request->timeSent = steady_clock::now();
+        request->nTimesSent = request->nTimesSent + 1;
+
+        m_router.sendPacket(arp_req, interface->name);
+      }
+      else
+      { 
+        removeReqEntries.push_back(request);
+      }
+    }
+  }
+
+  for(const auto& e: m_cacheEntries)
+  {
+    if(e->isValid == false ){
+      removeEntries.push_back(e);
+      std::cout << "Remove ARP Entry " <<std::endl;
+    }
+  }
+
+  for(const auto& e: removeReqEntries){
+    m_arpRequests.remove(e);
+  }
+  for(const auto& e: removeEntries){
+    m_cacheEntries.remove(e);
+  }
+print();
 }
+
+void
+ArpCache::print()
+{
+  std::cout << "ARP CACHE" <<std::endl;
+
+  for(const auto& e: m_cacheEntries)
+  {
+    std::cout << "entry: " << ipToString(e->ip) << std::endl;
+  }
+}
+
+void
+ArpCache::writeReq(Buffer& arp_req, std::shared_ptr<ArpRequest> request){
+  uint8_t *ptr = (uint8_t *) arp_req.data();
+  ethernet_hdr *eth_hdr = (ethernet_hdr *)ptr;
+
+  const Interface *iface = 
+  m_router.findIfaceByName(m_router.getRoutingTable().lookup(request->ip).ifName);
+
+  memcpy(eth_hdr->ether_shost, iface->addr.data(), ETHER_ADDR_LEN);
+  memset(eth_hdr->ether_dhost, 255, ETHER_ADDR_LEN);
+  eth_hdr->ether_type = htons(ethertype_arp);
+
+  arp_hdr *write_arp_hdr = (arp_hdr *)(ptr + sizeof(ethernet_hdr));
+  m_router.writeArpHeader(write_arp_hdr, htons(arp_op_request), iface, request->ip);
+  memset(write_arp_hdr->arp_tha, 255, ETHER_ADDR_LEN);
+}
+
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 
